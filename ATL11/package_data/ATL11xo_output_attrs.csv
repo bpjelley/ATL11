@@ -9,7 +9,7 @@ ROOT,dem_h,meters,xo_index,FALSE,float32,DEM height at the reference point,DEM h
 ROOT,geoid_h,meters,xo_index,FALSE,float32,geoid height at the reference point,Geoid height,ATL06,longitude latitude,,
 ROOT,n_slope,unitless,xo_index,FALSE,float32,Local north component of the reference surface slope,north component of reference surface slope,"Derived, ATL11 algorithm",longitude latitude,,
 ROOT,e_slope,unitless,xo_index,FALSE,float32,Local east component of the reference surface slope,east component of reference surface slope,"Derived, ATL11 algorithm",longitude latitude,,
-ROOT,fit_quality,1,xo_index,FALSE,int8,Reference point fit quality,"Indicates quality of the fit: 0: no problem identified, 1: One or more polynomial coefficient errors larger than 10, 2: One or more components of the surface slope has magnitude larger than 0.2, 3:  Conditions 1 and 2 both true.","Derived, ATL11 algorithm",longitude latitude,0,32
+ROOT,fit_quality,1,xo_index,FALSE,int8,"Indicates quality of the datum-track reference surface fit: 0: no problem identified, 1: One or more polynomial coefficient errors larger than 10, 2: One or more components of the surface slope has magnitude larger than 0.2, 3:  Conditions 1 and 2 both true.",reference point fit quality,"Derived, ATL11 algorithm",longitude latitude,0,32
 ,,,,,,,,,,,
 datum_track,,,,,,Data from the track for which the along-track calculation was performed in ATL11,,,,,
 datum_track,ref_pt,1,../xo_index,FALSE,int32,the reference-point number for the datum track,reference point,ATL06,longitude latitude,0,2000000
@@ -38,6 +38,5 @@ crossing_track,dh_geoloc,meters,../xo_index,FALSE,float32,Correction applied to 
 crossing_track,tide_ocean,meters,../xo_index,FALSE,float32,Ocean-tide estimate ,crossing track ocean tide,ATL06,longitude latitude,-40,40
 crossing_track,dac,meters,../xo_index,FALSE,float32,Dynamic atmosphere correction ,crossing track dynamic atmosphere correction,ATL06,longitude latitude,-40,40
 crossing_track,atl06_quality_summary,1,../xo_index,FALSE,int8,"Quality flag derived from ATL06.  0 indicates no problems detected, 1 indicates potential problems",crossing track ATL06 quality summary,ATL06,longitude latitude,0,16
-
+,,,,,,,,,,,
 crossing_track,along_track_rss,meters,../xo_index,FALSE,float32,Root sum of the squared differences between the heights of the endpoints for the crossing-track segment and the centers of the previous and next segments,root sum of squared differences in crossing-track heights,"Derived, ATL11 algorithm",longitude latitude,0,100
-
