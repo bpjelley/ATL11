@@ -44,8 +44,18 @@ def ATL11_browse_plots(ATL11_file, hemisphere=1, mosaic=None, out_path=None, pdf
     end_cycle=cycle_number[-1]
     num_cycles=len(cycle_number)
     
-    # establish color maps, enough for 30 cycles
+    # establish color maps, enough for 90 cycles
     colorslist = ['black','darkred','red','darkorange','gold','yellowgreen',
+                  'green','darkturquoise','steelblue','blue','rebeccapurple','purple',
+                  'orchid','deeppink','crimson','firebrick','sienna','rosybrown',
+                  'darkgray','cornflowerblue','navy','black','darkred','red',
+                  'darkorange','gold','yellowgreen','green','darkturquoise','steelblue',
+                  'black','darkred','red','darkorange','gold','yellowgreen',
+                  'green','darkturquoise','steelblue','blue','rebeccapurple','purple',
+                  'orchid','deeppink','crimson','firebrick','sienna','rosybrown',
+                  'darkgray','cornflowerblue','navy','black','darkred','red',
+                  'darkorange','gold','yellowgreen','green','darkturquoise','steelblue',
+                  'black','darkred','red','darkorange','gold','yellowgreen',
                   'green','darkturquoise','steelblue','blue','rebeccapurple','purple',
                   'orchid','deeppink','crimson','firebrick','sienna','rosybrown',
                   'darkgray','cornflowerblue','navy','black','darkred','red',
