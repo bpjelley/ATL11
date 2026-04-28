@@ -377,7 +377,7 @@ def post_process(out_files, project_bin, region, verbose=False):
         control = file.replace('.h5', '.ctl')
         with open(control, "w") as ctlfile:
             for line in ctllines:
-                ctlfile.write(re.sub(r'_atl11file_', file, line))
+                ctlfile.write(re.sub(r'_atl11file_', file.replace(".h5",""), line))
 # Run atlas_meta
         try:
             result = subprocess.run([atlas_meta, control], capture_output=True, text= True)
@@ -416,6 +416,22 @@ def post_process(out_files, project_bin, region, verbose=False):
     if verbose:
         print("Completed post_process")
 
+def make_browse_queue(out_files, project_bin, region, queue_file, verbose=False):
+
+    if region=='AA':
+        mosaic_tif = project_bin+'/mosaic_500m_dem_filled.tif'
+        hemisph = -1
+    else:   
+        mosaic_tif = project_bin+'/arcticdem_mosaic_500m_v3.0.tif'
+        hemisph = 1
+
+    with open(queue_file, "w") as brw_q_file:
+        for file in out_files:
+            brw_q_file.write(f'ATL11xo_browse_plots.py {file} {mosaic_tif} -H {hemisph}\n')
+            print(f'ATL11xo_browse_plots.py {file} {mosaic_tif} -H {hemisph}')
+    if verbose:
+        print("Wrote browse queue to file {queue_file}")
+
 def main():
     parser=argparse.ArgumentParser(description='Generate a set of ATL11xo tiles from a directory of ATL11_atxo along-track crossover files')
     parser.add_argument('--top_dir', type=str, required=True, help='top directory containing ATL11_atxo files')
@@ -434,8 +450,6 @@ def main():
     parser.add_argument('--bin_dir', type=str, default='/discover/nobackup/bjelley/bin', help='full path source of binaries and dem mosaics')
     parser.add_argument('--start_date', type=datetime.fromisoformat, default=None, required=False, help="Start date in ISO format, for output metadata [YYYY-DD-MM HH:mm:sss.s]")
     parser.add_argument('--end_date', type=datetime.fromisoformat, default=None, required=False, help="End date in ISO format, for output metadata [YYYY-DD-MM HH:mm:sss.s]")
-#    parser.add_argument('--start_date', type=lambda s: datetime.strptime(s, '%Y-%m-%d %H:%M:%S'), default=None, required=False, help="Start date in ISO format, for output metadata [YYYY-DD-MM HH:mm:sss.s]")
-#    parser.add_argument('--end_date', type=lambda s: datetime.strptime(s, '%Y-%m-%d %H:%M:%S'), default=None, required=False, help="End date in ISO format, for output metadata [YYYY-DD-MM HH:mm:sss.s]")
     parser.add_argument('--verbose','-v', action='store_true')
     args=parser.parse_args()
 
@@ -551,6 +565,8 @@ def main():
     # Run post processing steps
     if args.post_process:
         post_process(out_files, args.bin_dir, args.region, verbose=args.verbose)
+        brw_queue_file = f'queue_brw_{args.region}_{args.cycle:02d}.txt'
+        make_browse_queue(out_files, args.bin_dir, args.region, brw_queue_file, verbose=args.verbose)
 
 if __name__=="__main__":
     main()
