@@ -20,12 +20,68 @@ from ATL11.h5util import create_attribute
 from ATL11 import ATL11xo
 from ATL11.version import xosoftwareVersion, xosoftwareDate, xosoftwareTitle, xoidentifier, xoseries_version
 
+import io
+from datetime import datetime
+import requests
+import pandas as pd
+
+XLSX_URL = (
+    "https://nsidc.org/sites/default/files/documents/technical-reference/icesat-2-major-activities.xlsx"
+)
+
 def make_queue(args):
 
-    for cycle in range(1, args.cycle+1):
-        print(f'make_ATL11xo_tiles.py --top_dir {args.top_dir} --dest_dir {args.dest_dir} --release {args.release} --version {args.version} --cycle {cycle} --region {args.region} --ref_cycles {args.ref_cycles[0]} {args.ref_cycles[1]} --post_process {args.post_process}')
+    cycle_dates = get_icesat2_cycle_dates()
+    if args.verbose:
+        print(f"Found {len(cycle_dates)} cycles:\n")
+        for cycle, (startdate, enddate) in cycle_dates.items():
+            print(f"  Cycle {cycle:>2d}: {startdate:%Y-%m-%d} {enddate:%Y-%m-%d}")
 
-def write_meta_fields(D, h5f, ref_cycles, cycle):
+    for cycle in range(1, args.cycle+1):
+        print(f'make_ATL11xo_tiles.py --top_dir {args.top_dir} --dest_dir {args.dest_dir} --release {args.release} '+
+            f'--version {args.version} --cycle {cycle} --region {args.region} --ref_cycles {args.ref_cycles[0]} {args.ref_cycles[1]} '+
+            f'--post_process {args.post_process} --start_date "{cycle_dates[cycle][0]}" --end_date "{cycle_dates[cycle][1] - timedelta(seconds=0.000001)}"')
+
+def get_icesat2_cycle_dates(url: str = XLSX_URL) -> dict[int, datetime, datetime]:
+    """
+    Download the ICESat-2 Major Activities spreadsheet and return a dict
+    mapping each cycle number to its start and end date as datetime objects.
+
+    Parameters
+    ----------
+    url : str
+        Direct URL of the .xlsx file.
+
+    Returns
+    -------
+    dict[int, (datetime, datetime)]
+        {cycle_number: datetime datetime}
+
+    Raises
+    ------
+    requests.HTTPError
+        If the file cannot be downloaded.
+    """
+    response = requests.get(url, timeout=60)
+    response.raise_for_status()
+
+    df = pd.read_excel(
+        io.BytesIO(response.content),
+        sheet_name="Pointing Record",
+        usecols=["CYCLE", "DATES"],
+        header=1
+    )
+
+    df = df.dropna(subset=["CYCLE", "DATES"])
+    df["CYCLE"] = df["CYCLE"].astype(int)
+
+    df['startdate'] = df['DATES'].str.split().str[0]
+    df['enddate'] = df['DATES'].str.split().str[-1]
+    del df["DATES"]
+    return {k: (start, end) for k, start, end in zip(df["CYCLE"],
+        pd.to_datetime(df["startdate"]).dt.to_pydatetime(), pd.to_datetime(df["enddate"]).dt.to_pydatetime())}
+
+def write_meta_fields(D, h5f, ref_cycles, cycle, start_utc_time, end_utc_time):
     ''' Write the metadata fields to an hdf5 file handle '''
 
     maxlon = h5f['/'].attrs['geospatial_lon_max']
@@ -79,15 +135,18 @@ def write_meta_fields(D, h5f, ref_cycles, cycle):
     g2['release'][...] = os.path.basename(h5f.filename).split('_')[-2].encode('ASCII','replace')
     g2['version'][...] = os.path.splitext(os.path.basename(h5f.filename))[0].split('_')[-1].encode('ASCII','replace')
 
-    epoch = datetime(2018, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-    start_delta_time = timedelta(seconds=np.array([np.nanmin(D.delta_time)])[0])
-    start_utc_time = epoch + start_delta_time
+    if start_utc_time is None or end_utc_time is None:
+        epoch = datetime(2018, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        start_delta_time = timedelta(seconds=np.array([np.nanmin(D.delta_time)])[0])
+        start_utc_time = epoch + start_delta_time
+        end_delta_time = timedelta(seconds=np.array([np.nanmax(D.delta_time)])[0])
+        end_utc_time = epoch + end_delta_time
+
     str_start_utc = (str(start_utc_time.date())+'T'+
-                    start_utc_time.strftime("%H:%M:%S.%f")+'Z')
-    end_delta_time = timedelta(seconds=np.array([np.nanmax(D.delta_time)])[0])
-    end_utc_time = epoch + end_delta_time
+                start_utc_time.strftime("%H:%M:%S.%f")+'Z')
     str_end_utc = (str(end_utc_time.date())+'T'+
-                    end_utc_time.strftime("%H:%M:%S.%f")+'Z')
+                end_utc_time.strftime("%H:%M:%S.%f")+'Z')
+    
     create_attribute(h5f['/'].id, 'time_coverage_start', [], str_start_utc)
     create_attribute(h5f['/'].id, 'time_coverage_end', [], str_end_utc)
     h5f['/'].attrs['time_coverage_duration'] = np.array([np.nanmax(D.delta_time)])[0] - np.array([np.nanmin(D.delta_time)])[0]
@@ -233,7 +292,7 @@ def write_data(out_file, xyT, D_cache, args, group_attrs, group_descriptions, gr
                 #    group_descriptions[group].encode('ascii')
             if group=='crossing_track':
                 # this group contains delta_time, segment, and rgt
-                write_meta_fields(Dsub, fh, args.ref_cycles, args.cycle)
+                write_meta_fields(Dsub, fh, args.ref_cycles, args.cycle, args.start_date, args.end_date)
             if 'delta_time' in fh[out_group]:
                 create_attribute(fh[out_group]['delta_time'].id, 'standard_name', [], 'time')
                 create_attribute(fh[out_group]['delta_time'].id, 'calendar', [], 'standard')
@@ -363,7 +422,7 @@ def main():
     parser.add_argument('--dest_dir', type=str, required=False, help='output directory for ATL11xo files')
     parser.add_argument('--EPSG', type=int, required=False, help='EPSG string for output')
     parser.add_argument('--release', type=int, required=True, help='ATL11 release number')
-    parser.add_argument('--version', type=int, required=True, help='ATL11xo version number')
+    parser.add_argument('--version', type=int, required=True, help='ATL11XO version number')
     parser.add_argument('--cycle', type=int, required=True, help='cycle number')
     parser.add_argument('--ref_cycles', type=int, nargs=2, required=True, help='first and last reference-track cycles included in the fit')
     parser.add_argument('--queue','-q', action="store_true", help='if set, a queue of commands will be ouput that make tiles for cycles 1...args.cycle')
@@ -373,6 +432,10 @@ def main():
     parser.add_argument('--min_points', type=int, default=2, help='if fewer than this number of points are present, the tile will be skipped')
     parser.add_argument('--post_process', type=bool, default=False, help='if true, run atlas_meta and QA utility')
     parser.add_argument('--bin_dir', type=str, default='/discover/nobackup/bjelley/bin', help='full path source of binaries and dem mosaics')
+    parser.add_argument('--start_date', type=datetime.fromisoformat, default=None, required=False, help="Start date in ISO format, for output metadata [YYYY-DD-MM HH:mm:sss.s]")
+    parser.add_argument('--end_date', type=datetime.fromisoformat, default=None, required=False, help="End date in ISO format, for output metadata [YYYY-DD-MM HH:mm:sss.s]")
+#    parser.add_argument('--start_date', type=lambda s: datetime.strptime(s, '%Y-%m-%d %H:%M:%S'), default=None, required=False, help="Start date in ISO format, for output metadata [YYYY-DD-MM HH:mm:sss.s]")
+#    parser.add_argument('--end_date', type=lambda s: datetime.strptime(s, '%Y-%m-%d %H:%M:%S'), default=None, required=False, help="End date in ISO format, for output metadata [YYYY-DD-MM HH:mm:sss.s]")
     parser.add_argument('--verbose','-v', action='store_true')
     args=parser.parse_args()
 
@@ -391,6 +454,11 @@ def main():
         else:
             args.EPSG=3413
 
+    try:
+        os.mkdir(args.dest_dir)
+    except FileExistsError:
+        pass
+
     tile_out_dir = os.path.join(args.dest_dir, f'cycle_{args.cycle:02d}')
     try:
         os.mkdir(tile_out_dir)
@@ -398,7 +466,7 @@ def main():
         pass
 
     tS = pc.tilingSchema(mapping_function_name='floor', tile_spacing=args.tile_spacing, EPSG=args.EPSG,
-                        format_str = f'ATL11xo_{args.region}_E%d_N%d_c{args.cycle:02d}_{args.release:03d}_{args.version:02d}')
+                        format_str = f'ATL11XO_{args.region}_E%d_N%d_c{args.cycle:02d}_{args.release:03d}_{args.version:02d}')
     schema_file = os.path.join(tile_out_dir, f'{int(args.tile_spacing/1000)}km_tiling_{args.region}.json')
     if not os.path.isfile(schema_file):
         tS.to_json(schema_file)
@@ -467,6 +535,8 @@ def main():
                 D_cache[group][xyT] = Dsub
     if args.verbose:
         print('completed reading/processing of input data')
+        print('Start date:', args.start_date)
+        print('End date:', args.end_date)
     # now loop over output files:
     out_files = []
     for xyT in D_cache['ROOT'].keys():
