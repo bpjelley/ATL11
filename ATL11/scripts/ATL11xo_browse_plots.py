@@ -43,7 +43,7 @@ def ATL11xo_browse_plots(ATL11xo_file,
     Dd = pc.data().from_h5(args.ATL11xo_file, group='datum_track',fields=['h_corr','delta_time'])
 
 
-    tile_re = re.compile(r'ATL11xo_(..)_E(.*)_N(.*)_c(\d\d)_(\d\d\d)_(\d\d).h5')
+    tile_re = re.compile(r'ATL11XO_(..)_E(.*)_N(.*)_c(\d\d)_(\d\d\d)_(\d\d).h5')
     region, x0, y0, cycle, release, version = \
         tile_re.search(os.path.basename(args.ATL11xo_file)).groups()
 
@@ -180,7 +180,6 @@ def ATL11xo_browse_plots(ATL11xo_file,
         for ii in range(len(png_buffers)):
             hf.require_group('/default')
 #            img = imageio.imread(name, pilmode='RGB')
-            print('ii: ', ii)
 #            img = png_buffers[ii]
             img = imageio.imread(png_buffers[ii], pilmode='RGB')
 
@@ -188,7 +187,6 @@ def ATL11xo_browse_plots(ATL11xo_file,
 #            namestr = os.path.basename(namestr).split('BRW_')[-1]
 
             namestr = 'default'+str(ii+1)
-            print('namestr: ', namestr)
             dset = hf.create_dataset('default/'+namestr, img.shape, data=img.data, \
                                      chunks=img.shape, compression='gzip',compression_opts=6)
             dset.attrs['CLASS'] = np.bytes_('IMAGE')
