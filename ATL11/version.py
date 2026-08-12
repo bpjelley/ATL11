@@ -17,5 +17,25 @@ def identifier():
     return identifier
 
 def series_version():
-    series_version='3.0'
+    series_version='1.0'
+    return series_version
+
+def xosoftwareVersion():
+    softwareVersion='1.0'
+    return softwareVersion
+
+def xosoftwareDate():
+    softwareDate='February 01 2026'
+    return softwareDate
+
+def xosoftwareTitle():
+    softwareTitle='ASAS L3B Land Ice PGE'
+    return softwareTitle
+
+def xoidentifier():
+    identifier='atlas_l3b_is'
+    return identifier
+
+def xoseries_version():
+    series_version='1.0'
     return series_version

@@ -12,3 +12,4 @@ from .rtw_mask import read_rtw_from_excel, read_rtw_from_csv, rtw_mask_for_delta
 from .poly_ref_surf import poly_ref_surf
 from .write_METADATA import write_METADATA
 from .calc_geoloc_bias import calc_geoloc_bias, calc_xy_spot
+from .ATL11xo.data import data

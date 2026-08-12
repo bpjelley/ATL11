@@ -70,6 +70,7 @@ dev = ["flake8", "pytest>=4.6", "pytest-cov"]
 "make_ATL11_queue_script.py" = "ATL11.scripts.make_ATL11_queue_script:main"
 "make_Greenland_script.py" = "ATL11.scripts.make_Greenland_script:main"
 "make_ATL11xo_tiles.py" = "ATL11.scripts.make_ATL11xo_tiles:main"
+"ATL11xo_browse_plots.py" = "ATL11.scripts.ATL11xo_browse_plots:main"
 
 [tool.setuptools]
 script-files = ["scripts/make_ATL06_file_indexing_discover.sh", "scripts/make_ATL06_tiles_adapt_wCopy.sh","scripts/make_ATL06_tiles_adapt_wCopy.sh", "scripts/make_ATL06_tiles_discover.sh", "scripts/make_ATL06_tiles.sh", "scripts/run_all_l3b_is.sh"]
