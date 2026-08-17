@@ -40,7 +40,10 @@ project_bin="/discover/nobackup/bjelley/bin"
 #xy_bias_csv =  str(resources.files('ATL11').joinpath("package_data/xy_biases_rel006_c1_24_plateau__0_800km_3day_100924.csv"))
 #xy_bias_csv =  str(resources.files('ATL11').joinpath("package_data/xy_biases_rel006_c1_25_plateau__0_800km_3day_011025.csv"))
 #xy_bias_csv =  str(resources.files('ATL11').joinpath("package_data/xy_biases_rel006_c1_26_plateau__0_800km_3day_20250225.csv"))
-xy_bias_csv =  str(resources.files('ATL11').joinpath("package_data/xy_biases_rel006_c1_26_plateau__0_800km_3day_20250422.csv"))
+#xy_bias_csv =  str(resources.files('ATL11').joinpath("package_data/xy_biases_rel006_c1_26_plateau__0_800km_3day_20250422.csv"))
+#xy_bias_csv =  str(resources.files('ATL11').joinpath("package_data/xy_biases_rel007_c1_30_plateau__0_800km_3day_2026-04-10.csv"))
+#xy_bias_csv =  str(resources.files('ATL11').joinpath("package_data/xy_biases_rel007_c1_30_plateau__0_800km_3day_2026-04-16.csv"))
+xy_bias_csv =  str(resources.files('ATL11').joinpath("package_data/xy_biases_rel007_c1_31_plateau__0_800km_3day_2026-07-01.csv"))
 
 # Greenland current best version--- user the list of ATL06 files in /home/ben/git_repos/ATL11/Greenland_ATL06_list.txt
 #python3 ~/git_repos/ATL11/make_ATL11_queue.py  -H 1 -i "/Volumes/ice2/ben/scf/GL_06/003/tiles/*/GeoIndex.h5" -A "/Volumes/ice2/ben/scf/GL_06/003/cycle_*/" -l /home/ben/git_repos/ATL11/Greenland_ATL06_list.txt -o /Volumes/ice2/ben/scf/GL_11/U07 -V U07 -c 3 7 > ~/temp/ATL11_run/GL_queue.txt
